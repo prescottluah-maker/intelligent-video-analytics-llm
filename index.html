@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CCTVagent — Surveillance Dashboard</title>
+<style>
+  :root {
+    --bg-page: #f4f3ef;
+    --surface-1: #ffffff;
+    --surface-2: #fbfaf7;
+    --text-primary: #16171a;
+    --text-secondary: #5b5c57;
+    --text-muted: #8b8a84;
+    --border: #e3e1d8;
+    --accent: #2a78d6;
+    --accent-bg: #e6f1fb;
+    --danger: #d03b3b;
+    --danger-bg: #fbe7e7;
+    --warning: #c07a00;
+    --success: #1e8a4c;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    /* background: var(--bg-page); */
+    background-image: url('https://img.magnific.com/free-vector/abstract-geometric-shape-bright-overlay-minimal-background_1017-62010.jpg');
+    color: var(--text-primary);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: 24px;
+  }
+
+  .dashboard { max-width: 1080px; margin: 0 auto; }
+
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .header-brand { display: flex; align-items: center; gap: 10px; }
+  .header-brand .logo-dot {
+    width: 34px; height: 34px; border-radius: 8px;
+    background: var(--accent-bg); color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px;
+  }
+  .header-brand h1 { font-size: 16px; font-weight: 600; margin: 0; }
+  .header-brand p { font-size: 12px; color: var(--text-muted); margin: 2px 0 0; }
+  .header-status { display: flex; align-items: center; gap: 18px; }
+  .status-ok { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--success); }
+  .status-ok .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+  .officer { display: flex; align-items: center; gap: 8px; }
+  .officer .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--accent-bg); color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+  }
+  .officer span { font-size: 13px; color: var(--text-secondary); }
+
+  .section-label { font-size: 15px; font-weight: 600; color: #1e1f1e; margin: 0 0 8px; }
+
+  .top-row {
+    display: grid; grid-template-columns: 2fr 1fr; gap: 16px;
+    align-items: stretch; margin-bottom: 18px;
+  }
+
+  .cam-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, 1fr); gap: 10px;
+  }
+
+  .cam-tile {
+    position: relative; border-radius: var(--radius); overflow: hidden;
+    min-height: 120px; background: var(--surface-1); border: 2px solid transparent;
+  }
+  .cam-tile img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .cam-tile.alert-high { border-color: var(--danger); }
+  .cam-tile.alert-medium { border-color: var(--warning); }
+
+  .cam-label {
+    position: absolute; top: 8px; left: 10px; font-size: 11px;
+    padding: 2px 8px; border-radius: 6px; background: rgba(0,0,0,0.55); color: #fff;
+  }
+  .cam-label.alert-high { background: var(--danger); }
+  .cam-label.alert-medium { background: var(--warning); }
+
+  .kpi-col { display: flex; flex-direction: column; gap: 10px; }
+  .kpi-card {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px; flex: 1;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .kpi-card.danger { background: var(--danger-bg); border-color: transparent; }
+  .kpi-card .kpi-label { font-size: 12px; color: var(--text-secondary); margin: 0 0 6px; }
+  .kpi-card.danger .kpi-label { color: var(--danger); }
+  .kpi-card .kpi-value { font-size: 22px; font-weight: 600; margin: 0; }
+  .kpi-card.danger .kpi-value { color: var(--danger); }
+
+  .mid-row {
+    display: grid; grid-template-columns: 2fr 1fr; gap: 16px;
+    align-items: start; margin-bottom: 18px;
+  }
+
+  .advisory-list { display: flex; flex-direction: column; gap: 8px; }
+  .advisory-card {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 12px;
+  }
+  .advisory-card.high { border-color: var(--danger); }
+  .advisory-tag { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .advisory-tag.high { color: var(--danger); }
+  .advisory-tag.medium { color: var(--warning); }
+  .advisory-tag.info { color: var(--text-secondary); }
+  .advisory-card p.body { font-size: 13px; margin: 0; color: var(--text-primary); }
+
+  .severity-card { background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .severity-bar { height: 8px; border-radius: 4px; overflow: hidden; display: flex; margin-bottom: 10px; }
+  .severity-bar span { display: block; height: 100%; }
+  .severity-legend { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+  .severity-legend .sw { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; }
+
+  .chart-card { background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 14px; height: 160px; padding-top: 10px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+  .bar { width: 100%; max-width: 32px; background: var(--accent); border-radius: 4px 4px 0 0; }
+  .bar-col .day-label { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+  .bar-col .day-value { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; }
+
+  @media (max-width: 720px) {
+    .top-row, .mid-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="dashboard">
+
+  <div class="header">
+    <div class="header-brand">
+      <div class="logo-dot">CCTV-Agent</div>
+      <div>
+        <h1>CCTVagent</h1>
+        <p style="color: #1e1f1e;">GenAI Surveillance System — LLM + RAG</p>
+      </div>
+    </div>
+    <div class="header-status">
+      <div class="status-ok"><span class="dot"></span>All systems nominal</div>
+      <div class="officer">
+        <div class="avatar">SO</div>
+        <span>Senior Officer: Preston Luah</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="top-row">
+    <div>
+      <p class="section-label">Live situational feeds</p>
+      <div class="cam-grid">
+        <div class="cam-tile">
+          <img src="https://images.squarespace-cdn.com/content/v1/5e95a9a41a2cc96f640840bf/e3311726-430c-4495-ac54-87ab0b05595a/Parking+Lot.jpg" alt="Gate 2 camera feed" width="400" height="225" />
+          <span class="cam-label">Gate 2</span>
+        </div>
+        <div class="cam-tile alert-high">
+          <img src="https://www.securecomm.us/wp-content/uploads/2025/04/97-night-vision-security-loading-bay-768x576.jpg" alt="Loading dock camera feed showing intrusion alert" width="400" height="225" />
+          <span class="cam-label alert-high">Loading bay — intrusion</span>
+        </div>
+        <div class="cam-tile">
+          <img src="https://www.nimbleplanet.com/wp-content/uploads/2017/07/Hotel-CCTV.jpg" alt="Lobby camera feed" width="400" height="225" />
+          <span class="cam-label">Lobby</span>
+        </div>
+        <div class="cam-tile alert-medium">
+          <img src="https://www.securitycamera-ny.com/uploads/1/3/1/6/13166385/parking-lot-security-camera-2_orig.jpg" alt="Parking B camera feed showing crowding alert" width="400" height="225" />
+          <span class="cam-label alert-medium">Parking B — crowding</span>
+        </div>
+        <div class="cam-tile">
+          <img src="https://www.shutterstock.com/image-photo/water-tank-tinaco-on-top-260nw-2593919643.jpg" alt="Rooftop camera feed" width="400" height="225" />
+          <span class="cam-label">Rooftop</span>
+        </div>
+        <div class="cam-tile alert-medium">
+          <img src="https://img.pikbest.com/ai/illus_our/20230428/3e492308459b2d06a6c50463ec0abf15.jpg!w700wp" alt="Server room camera feed showing smoke alert" width="400" height="225" />
+          <span class="cam-label alert-medium">Server rm — smoke</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-col">
+      <p class="section-label">Overview</p>
+      <div class="kpi-card">
+        <p class="kpi-label">Cameras online</p>
+        <p class="kpi-value">142 / 148</p>
+      </div>
+      <div class="kpi-card danger">
+        <p class="kpi-label">Active alerts</p>
+        <p class="kpi-value">3</p>
+      </div>
+      <div class="kpi-card">
+        <p class="kpi-label">Incidents today</p>
+        <p class="kpi-value">11</p>
+      </div>
+      <div class="kpi-card">
+        <p class="kpi-label">Avg response time</p>
+        <p class="kpi-value">1m 42s</p>
+      </div>
+      <div class="kpi-card">
+        <p class="kpi-label">RAG queries / hr</p>
+        <p class="kpi-value">37</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="mid-row">
+    <div>
+      <p class="section-label">LLM advisories (RAG-grounded)</p>
+      <div class="advisory-list">
+        <div class="advisory-card high">
+          <div class="advisory-tag high">High priority</div>
+          <p class="body">Loading dock camera 14: forced-entry pattern matches SOP 4.2. Recommend dispatch now.</p>
+        </div>
+        <div class="advisory-card">
+          <div class="advisory-tag medium">Advisory</div>
+          <p class="body">Server room haze consistent with past HVAC false alarms (3 similar cases this month). Verify before escalating.</p>
+        </div>
+        <div class="advisory-card">
+          <div class="advisory-tag info">Info</div>
+          <p class="body">Parking B crowding aligns with shift-change pattern seen every weekday around this time.</p>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="section-label">Alert severity mix</p>
+      <div class="severity-card">
+        <div class="severity-bar">
+          <span style="width:27%; background:#d03b3b;"></span>
+          <span style="width:46%; background:#e0a12c;"></span>
+          <span style="width:27%; background:#a3a196;"></span>
+        </div>
+        <div class="severity-legend">
+          <span><span class="sw" style="background:#d03b3b;"></span>High &nbsp;3</span>
+          <span><span class="sw" style="background:#e0a12c;"></span>Medium &nbsp;5</span>
+          <span><span class="sw" style="background:#a3a196;"></span>Low &nbsp;3</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p class="section-label">Incidents, last 7 days</p>
+    <div class="chart-card">
+      <div class="bar-chart">
+        <div class="bar-col"><span class="day-value">9</span><div class="bar" style="height:64%;"></div><span class="day-label">Mon</span></div>
+        <div class="bar-col"><span class="day-value">11</span><div class="bar" style="height:79%;"></div><span class="day-label">Tue</span></div>
+        <div class="bar-col"><span class="day-value">8</span><div class="bar" style="height:57%;"></div><span class="day-label">Wed</span></div>
+        <div class="bar-col"><span class="day-value">14</span><div class="bar" style="height:100%;"></div><span class="day-label">Thu</span></div>
+        <div class="bar-col"><span class="day-value">10</span><div class="bar" style="height:71%;"></div><span class="day-label">Fri</span></div>
+        <div class="bar-col"><span class="day-value">6</span><div class="bar" style="height:43%;"></div><span class="day-label">Sat</span></div>
+        <div class="bar-col"><span class="day-value">11</span><div class="bar" style="height:79%;"></div><span class="day-label">Sun</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
